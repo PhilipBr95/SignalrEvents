@@ -139,7 +139,6 @@ namespace SignalClassLibrary
 
             _logger?.LogInformation($"Sending {_eventGroup}=>{handler.Key} - {json}");
 
-            checkin then fix this!!
             //Todo async!!
             _connection.InvokeAsync("RaiseEvent", _eventGroup, handler.Key, json).GetAwaiter().GetResult();
         }
