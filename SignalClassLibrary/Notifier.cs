@@ -1,36 +1,16 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Data.Common;
 using System.Reflection;
 
 namespace SignalClassLibrary
 {
-    [Flags]
-    public enum NotifierPurposes
-    {
-        Receive = 1,
-        Send = 2
-    }
-
-    internal class EventHandler
-    {
-        public Type ArgumentType { get; internal set; }
-        public Delegate Handler { get; internal set; }
-    }
-
     public class Notifier<T> where T : new()
     {
         private readonly NotifierSettings _notifierSettings;
         private readonly ILogger? _logger;
-
-        
-        private HubConnection _connection;
-        private T _notifierEvents;
         private string? _eventGroup => typeof(T).FullName;
-
+        private HubConnection _connection;
+        private T _notifierEvents;        
         private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>();
 
         public Notifier(NotifierSettings notifierSettings, ILogger<Notifier<T>>? logger)
@@ -49,11 +29,12 @@ namespace SignalClassLibrary
         {
             try
             {
-                if (purposes.HasFlag(NotifierPurposes.Receive) && purposes.HasFlag(NotifierPurposes.Send))
-                    _logger?.LogWarning($"Having {nameof(NotifierPurposes.Receive)} and {nameof(NotifierPurposes.Send)} will cause a feedback loop!!");
+                if (purposes.HasFlag(NotifierPurposes.Receiver) && purposes.HasFlag(NotifierPurposes.Transmitter))
+                    _logger?.LogWarning($"Having {nameof(NotifierPurposes.Receiver)} and {nameof(NotifierPurposes.Transmitter)} will cause a feedback loop!!");
 
                 _connection = new HubConnectionBuilder()
                     .WithUrl(_notifierSettings.Url)
+                    .WithAutomaticReconnect()
                 .Build();
 
                 _connection.Closed += async (error) =>
@@ -76,11 +57,11 @@ namespace SignalClassLibrary
                 _notifierEvents = new T();
 
                 //Configure receiving messages
-                if (purposes.HasFlag(NotifierPurposes.Receive))                
+                if (purposes.HasFlag(NotifierPurposes.Receiver))                
                     _connection.On<string, string, string>("RaiseEvent", (eventGroup, eventName, json) => PublishEventLocally(eventGroup, eventName, json)); //Don't like RaiseEvent :-(
 
                 //Configure sending messages
-                if (purposes.HasFlag(NotifierPurposes.Send))
+                if (purposes.HasFlag(NotifierPurposes.Transmitter))
                 {
                     var events = typeof(T).GetEvents();
                     foreach (var evt in events)
@@ -134,13 +115,13 @@ namespace SignalClassLibrary
         /// <param name="args"></param>
         private void HandleRemoteEvent<TArgs>(object? sender, TArgs args)
         {
-            var json = System.Text.Json.JsonSerializer.Serialize(args);            
+            var json = System.Text.Json.JsonSerializer.Serialize(args);
             var handler = _eventHandlers.First();
 
             _logger?.LogInformation($"Sending {_eventGroup}=>{handler.Key} - {json}");
 
-            //Todo async!!
-            _connection.InvokeAsync("RaiseEvent", _eventGroup, handler.Key, json).GetAwaiter().GetResult();
+            //Don't care it's async
+            _connection.InvokeAsync("RaiseEvent", _eventGroup, handler.Key, json);
         }
 
         /// <summary>

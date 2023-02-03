@@ -10,14 +10,12 @@ namespace ClassLibrary1
     }
 
     public class StartedEventArgs : CalculationNotificationEventArgs { }
-    public class ProcessingEventArgs : CalculationNotificationEventArgs { }
     public class ErroredEventArgs: CalculationNotificationEventArgs { }
     public class FinishedEventArgs : CalculationNotificationEventArgs { }
  
     public class CalculationNotifications
     {
         public event EventHandler<StartedEventArgs> Started;
-        public event EventHandler<ProcessingEventArgs> Processing;
         public event EventHandler<FinishedEventArgs> Finished;
         public event EventHandler<ErroredEventArgs> Errored;     //I know it's poor grammer
         
@@ -29,14 +27,16 @@ namespace ClassLibrary1
         {
             Finished?.Invoke(sender, e);
         }
+        public void RaiseErrored(object sender, ErroredEventArgs e)
+        {
+            Errored?.Invoke(sender, e);
+        }
     }
 
     public class TreeNotifications
     {
         public event EventHandler<StartedEventArgs> Started;
-        public event EventHandler<ProcessingEventArgs> Processing;
         public event EventHandler<FinishedEventArgs> Finished;
-        public event EventHandler<ErroredEventArgs> Errored;     //I know it's poor grammer
 
         public void RaiseStarted(object sender, StartedEventArgs e)
         {

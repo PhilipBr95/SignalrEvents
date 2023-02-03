@@ -14,7 +14,12 @@ namespace ConsoleApp
             _loggerFactory = LoggerFactory.Create(builder =>
             {
                 builder.SetMinimumLevel(LogLevel.Debug);
-                builder.AddSimpleConsole();
+                builder.AddSimpleConsole(options =>
+                {
+                    options.IncludeScopes = true;
+                    options.SingleLine = true;
+                    options.TimestampFormat = "HH:mm:ss ";
+                });
             });
 
             _logger = _loggerFactory.CreateLogger<Program>();
@@ -30,7 +35,7 @@ namespace ConsoleApp
         private static async Task CreateCalc_ClientAsync(string loggerName) 
         {
             var notifier = new Notifier<CalculationNotifications>(new NotifierSettings { Url = "https://localhost:7062/ChatHub" }, _loggerFactory.CreateLogger(loggerName));
-            var notifications = await notifier.ConnectAsync(NotifierPurposes.Receive);
+            var notifications = await notifier.ConnectAsync(NotifierPurposes.Receiver);
 
             notifications.Started += (object? sender, StartedEventArgs e) =>
             {
@@ -41,7 +46,7 @@ namespace ConsoleApp
         private static async Task CreateTree_ClientAsync(string loggerName)
         {
             var notifier = new Notifier<TreeNotifications>(new NotifierSettings { Url = "https://localhost:7062/ChatHub" }, _loggerFactory.CreateLogger(loggerName));
-            var notifications = await notifier.ConnectAsync(NotifierPurposes.Receive);
+            var notifications = await notifier.ConnectAsync(NotifierPurposes.Receiver);
 
             notifications.Started += (object? sender, StartedEventArgs e) =>
             {
@@ -52,14 +57,14 @@ namespace ConsoleApp
         private static async Task CreateServerAsync()
         {
             var notifier = new Notifier<CalculationNotifications>(new NotifierSettings { Url = "https://localhost:7062/ChatHub" }, _loggerFactory.CreateLogger("Server"));
-            var notifications = await notifier.ConnectAsync(NotifierPurposes.Send);
+            var notifications = await notifier.ConnectAsync(NotifierPurposes.Transmitter);
             
             while (true)
             {
                 _logger.LogInformation("Press Enter to send");
                 Console.ReadLine();
 
-                notifications.RaiseStarted(null, new StartedEventArgs { TargetId = 555 });
+                notifications.RaiseStarted("Server 1", new StartedEventArgs { TargetId = 555 });
             }
         }
     }
