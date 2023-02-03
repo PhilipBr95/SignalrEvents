@@ -1,10 +1,16 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using SignalClassLibrary;
 
 namespace SignalrServer.Hubs
 {
     public class NotificationHub : Hub
     {
+        private readonly ILogger<NotificationHub> _logger;
+
+        public NotificationHub(ILogger<NotificationHub> logger)
+        {
+            _logger = logger;
+        }
+
         public override Task OnConnectedAsync()
         {
             return base.OnConnectedAsync();
@@ -12,17 +18,23 @@ namespace SignalrServer.Hubs
 
         public override Task OnDisconnectedAsync(Exception? exception)
         {
+            _logger.LogInformation($"{Context.ConnectionId} disconnected with {exception}");
             return base.OnDisconnectedAsync(exception);
         }
 
-        public async Task Send(string ClientId, string message)
-        {
-            await Clients.All.SendAsync(nameof(Actions.SendToClient), ClientId, message);
-        }
+        public async Task RaiseEvent(string eventGroup, string eventName, string json)
+        {            
+            _logger?.LogInformation($"Received event {eventGroup}=>{eventName} - {json} from {Context.ConnectionId}");
 
-        public async Task SendToAll(string message)
+            //Send it to everybody in theis group, except the sender
+            await Clients.GroupExcept(eventGroup, Context.ConnectionId)
+                         .SendAsync(nameof(RaiseEvent), eventGroup, eventName, json);
+        }
+        public async Task JoinGroup(string eventGroup)
         {
-            await Clients.All.SendAsync(nameof(Actions.SendToAll), message);
+            _logger?.LogInformation($"{Context.ConnectionId} joining {eventGroup}");
+
+            await Groups.AddToGroupAsync(Context.ConnectionId, eventGroup);
         }
     }
 }

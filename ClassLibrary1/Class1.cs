@@ -1,27 +1,52 @@
 ﻿using System.IO;
+using System.Reflection;
 
 namespace ClassLibrary1
 {
-    public class StartedEventArgs : EventArgs
-    {
-        public int TargetId { get; set; }
-    }
-    public class ProcessingEventArgs : EventArgs
+
+    public class CalculationNotificationEventArgs : EventArgs
     {
         public int TargetId { get; set; }
     }
 
-
+    public class StartedEventArgs : CalculationNotificationEventArgs { }
+    public class ProcessingEventArgs : CalculationNotificationEventArgs { }
+    public class ErroredEventArgs: CalculationNotificationEventArgs { }
+    public class FinishedEventArgs : CalculationNotificationEventArgs { }
+ 
     public class CalculationNotifications
     {
-        public event EventHandler<StartedEventArgs> OnStarted;
-        public event EventHandler<ProcessingEventArgs> OnProcessing;
-        //public event EventHandler<FinishedEventArgs> OnFinished;
-        //public event EventHandler<ErroredEventArgs> OnErrored;     //I know it's not right
+        public event EventHandler<StartedEventArgs> Started;
+        public event EventHandler<ProcessingEventArgs> Processing;
+        public event EventHandler<FinishedEventArgs> Finished;
+        public event EventHandler<ErroredEventArgs> Errored;     //I know it's poor grammer
         
         public void RaiseStarted(object sender, StartedEventArgs e)
+        {            
+            Started?.Invoke(sender, e);
+        }
+        public void RaiseFinished(object sender, FinishedEventArgs e)
         {
-            OnStarted?.Invoke(sender, e);
+            Finished?.Invoke(sender, e);
+        }
+    }
+
+    public class TreeNotifications
+    {
+        public event EventHandler<StartedEventArgs> Started;
+        public event EventHandler<ProcessingEventArgs> Processing;
+        public event EventHandler<FinishedEventArgs> Finished;
+        public event EventHandler<ErroredEventArgs> Errored;     //I know it's poor grammer
+
+        public void RaiseStarted(object sender, StartedEventArgs e)
+        {
+            var dd = Started.GetInvocationList();
+
+            Started?.Invoke(sender, e);
+        }
+        public void RaiseFinished(object sender, FinishedEventArgs e)
+        {
+            Finished?.Invoke(sender, e);
         }
     }
 }
