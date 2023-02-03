@@ -39,6 +39,7 @@ namespace ConsoleApp
 
             notifications.Started += (object? sender, StartedEventArgs e) =>
             {
+                
                 _logger.LogInformation($"{loggerName} Received {e.TargetId} from {sender}");
             };
         }
