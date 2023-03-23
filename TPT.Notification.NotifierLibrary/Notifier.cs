@@ -44,33 +44,25 @@ namespace TPT.Notification.NotifierLibrary
                     _logger?.LogWarning($"Disconnected with {error}");
                     await Task.Delay(new Random().Next(0, 5) * 1000);
 
-                    _logger?.LogWarning($"Connecting...");
-                    await _connection.StartAsync();
+                    _logger?.LogWarning($"Reconnecting...");
+                    await ConnectAndJoinGroup();
                 };
 
                 _logger?.LogInformation($"Connecting to {_notifierSettings.Url} as a [{purpose}]");
-
-                await _connection.StartAsync()
-                                 .ContinueWith((t) => 
-                                 {                    
-                                     _logger?.LogInformation($"Connected...");
-
-                                     _logger?.LogInformation($"Joining the group {_eventGroup}");
-                                     _connection.InvokeAsync("JoinGroup", _eventGroup);
-                                 });                
-
+                await ConnectAndJoinGroup();
+                
                 _notifierEvents = new T();
 
                 //Configure receiving messages
-                if (purpose.HasFlag(NotifierPurpose.Receiver))                
-                    _connection.On<object, string, string, object>("RaiseEvent", (sender, eventGroup, eventName, data) => PublishEventLocally(sender, eventGroup, eventName, data)); 
+                if (purpose.HasFlag(NotifierPurpose.Receiver))
+                    _connection.On<object, string, string, object>("RaiseEvent", (sender, eventGroup, eventName, data) => PublishEventLocally(sender, eventGroup, eventName, data));
 
                 //Configure sending messages
                 if (purpose.HasFlag(NotifierPurpose.Transmitter))
                 {
                     var events = typeof(T).GetEvents();
                     foreach (var evt in events)
-                    {                        
+                    {
                         var eventHandler = GetEventHandlerFor(evt);
 
                         if (eventHandler == null)
@@ -87,12 +79,27 @@ namespace TPT.Notification.NotifierLibrary
 
                 return _notifierEvents;
             }
-            catch(Exception ex) 
+            catch (Exception ex) 
             {
                 _logger?.LogError(ex, $"EventGroup: {_eventGroup}, Url: {_notifierSettings.Url}");
                 throw;
             }
-        }        
+        }
+
+        private async Task ConnectAndJoinGroup()
+        {
+            await _connection.StartAsync()
+                             .ContinueWith((t) =>
+                             {
+                                 if (_connection.State != HubConnectionState.Connected)
+                                     throw new InvalidOperationException("Failed to connect!!");
+
+                                 _logger?.LogInformation($"Connected...");
+
+                                 _logger?.LogInformation($"Joining the group {_eventGroup}");
+                                 _connection.InvokeAsync("JoinGroup", _eventGroup);
+                             });
+        }
 
         private EventHandler GetEventHandlerFor(EventInfo eventInfo)
         {
@@ -130,10 +137,13 @@ namespace TPT.Notification.NotifierLibrary
             var json = _notifierSettings.Serialiser.Serialise(args);
             var handler = _eventHandlers[typeof(TArgs).FullName];
 
-            _logger?.LogDebug($"Sending {_eventGroup}=>{handler.EventName} - {json}");
+            _logger?.LogInformation($"Sending {_eventGroup}=>{handler.EventName} - {json}");
 
-            //Don't care it's async
-            _connection.InvokeAsync("RaiseEvent", sender, _eventGroup, handler.EventName, json);
+            //It's async - don't care about waiting
+            if(_notifierSettings.IsPrivate)
+                _connection.InvokeAsync("RaiseClientGroupEvent", sender, _connection.ConnectionId, _eventGroup, handler.EventName, json);
+            else
+                _connection.InvokeAsync("RaiseGroupEvent", sender, _eventGroup, handler.EventName, json);
         }
 
         /// <summary>

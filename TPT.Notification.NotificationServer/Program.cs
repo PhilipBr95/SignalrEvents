@@ -1,6 +1,4 @@
-using SignalrServer.Hubs;
-
-namespace SignalrServer
+namespace TPT.Notification.NotificationServer
 {
     public class Program
     {
@@ -32,10 +30,10 @@ namespace SignalrServer
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
-
             app.UseAuthorization();
-            app.MapHub<NotificationHub>("/chatHub");
+
+            app.MapHub<NotificationHub>($"/{nameof(NotificationHub)}");
+            app.Logger.LogInformation($"Listening @ /{nameof(NotificationHub)}");
 
             app.MapControllers();
 
