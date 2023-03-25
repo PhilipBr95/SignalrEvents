@@ -1,6 +1,5 @@
 ﻿using ClassLibrary1;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 using TPT.Notification.NotifierLibrary;
 
 namespace ConsoleApp3
@@ -37,17 +36,17 @@ namespace ConsoleApp3
 
         private static async Task CreateClientAsync(INotifierSerialiser jsonSerialiser)
         {
-            var notifier = new Notifier<CalculationNotifications>(new NotifierSettings("https://localhost:5001/NotificationHub", NotifierPurpose.Receiver, jsonSerialiser, false), _loggerFactory.CreateLogger("Client"));
+            var notifier = new Notifier<CalculationNotification>(new NotifierSettings("https://localhost:5001/NotificationHub", NotifierPurpose.Receiver, null, jsonSerialiser), _loggerFactory.CreateLogger("Client"));
             var notifications = await notifier.ConnectAsync();
 
             notifications.Started += (object? sender, StartedEventArgs e) =>
             {
-                _logger.LogInformation($"Received {nameof(notifications.Started)} for {e.TargetId} from {sender}");
+                _logger.LogInformation($"Received {nameof(notifications.Started)} for {e.RequestId} from {sender}");
             };
 
             notifications.Finished += (object? sender, FinishedEventArgs e) =>
             {
-                _logger.LogInformation($"Received {nameof(notifications.Finished)} for {e.TargetId} from {sender}");
+                _logger.LogInformation($"Received {nameof(notifications.Finished)} for {e.RequestId} from {sender}");
             };
 
             Console.ReadLine();
@@ -55,33 +54,20 @@ namespace ConsoleApp3
 
         private static async Task CreateServerAsync(INotifierSerialiser jsonSerialiser)
         {
-            var notifier = new Notifier<CalculationNotifications>(new NotifierSettings("https://localhost:5001/NotificationHub", NotifierPurpose.Transmitter, jsonSerialiser, false), _loggerFactory.CreateLogger("Client"));
+            var notifier = new Notifier<CalculationNotification>(new NotifierSettings("https://localhost:5001/NotificationHub", NotifierPurpose.Transmitter, null, jsonSerialiser), _loggerFactory.CreateLogger("Client"));
             var notifications = await notifier.ConnectAsync();
 
             while (true)
             {                
                 Console.ReadLine();
                 
-                notifications.RaiseStarted(new object(), new StartedEventArgs { TargetId = 9990 });
+                notifications.RaiseStarted(new object(), new StartedEventArgs { RequestId = 9990 });
 
                 await Task.Delay(5000).ContinueWith(t =>
                 {
-                    notifications.RaiseFinished(new object(), new FinishedEventArgs { TargetId = 9990 });
+                    notifications.RaiseFinished(new object(), new FinishedEventArgs { RequestId = 9990 });
                 });
             }
-        }
-    }
-
-    public class MySerialiser : INotifierSerialiser
-    {
-        public object? Deserialise(string? json, Type returnType)
-        {
-            return JsonSerializer.Deserialize(json, returnType, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        }
-
-        public string Serialise(object? obj)
-        {
-            return JsonSerializer.Serialize(obj);
         }
     }
 }

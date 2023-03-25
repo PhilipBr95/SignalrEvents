@@ -39,7 +39,8 @@ namespace TPT.Notification.NotifierLibrary
                     .WithAutomaticReconnect()
                 .Build();
 
-                _connection.Closed += async (error) =>
+                _connection.
+                _connection...Closed += async (error) =>
                 {
                     _logger?.LogWarning($"Disconnected with {error}");
                     await Task.Delay(new Random().Next(0, 5) * 1000);

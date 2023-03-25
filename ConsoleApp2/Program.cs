@@ -51,18 +51,18 @@ namespace ConsoleApp
 
         private static async Task CreateCalc_ClientAsync(string loggerName, INotifierSerialiser jsonSerialiser) 
         {
-            var notifier = new Notifier<CalculationNotifications>(new NotifierSettings("https://localhost:7062/NotificationHub", NotifierPurpose.Receiver, jsonSerialiser, false), _loggerFactory.CreateLogger(loggerName));
+            var notifier = new Notifier<CalculationNotification>(new NotifierSettings("https://localhost:7062/NotificationHub", NotifierPurpose.Receiver, null, jsonSerialiser), _loggerFactory.CreateLogger(loggerName));
             var notifications = await notifier.ConnectAsync();
 
             notifications.Started += (object? sender, StartedEventArgs e) =>
             {
                 var objSender = jsonSerialiser.Deserialise(sender.ToString(), typeof(FakeSender)) as FakeSender;
-                _logger.LogInformation($"{loggerName}: Received {nameof(notifications.Started)} for {e.TargetId} from {objSender.SenderId}[Converted]");
+                _logger.LogInformation($"{loggerName}: Received {nameof(notifications.Started)} for {e.RequestId} from {objSender.SenderId}[Converted]");
             };
 
             notifications.Finished += (object? sender, FinishedEventArgs e) =>
             {
-                _logger.LogInformation($"{loggerName}: Received {nameof(notifications.Finished)} for {e.TargetId} from {sender}");
+                _logger.LogInformation($"{loggerName}: Received {nameof(notifications.Finished)} for {e.RequestId} from {sender}");
             };
         }
 
@@ -70,18 +70,18 @@ namespace ConsoleApp
 
         private static async Task CreateTree_ClientAsync(string loggerName, INotifierSerialiser jsonSerialiser)
         {       
-            var notifier = new Notifier<TreeNotifications>(new NotifierSettings("https://localhost:7062/NotificationHub", NotifierPurpose.Receiver, jsonSerialiser, false), _loggerFactory.CreateLogger(loggerName));
+            var notifier = new Notifier<TreeNotifications>(new NotifierSettings("https://localhost:7062/NotificationHub", NotifierPurpose.Receiver, null, jsonSerialiser), _loggerFactory.CreateLogger(loggerName));
             var notifications = await notifier.ConnectAsync();
 
             notifications.Started += (object? sender, StartedEventArgs e) =>
             {
-                _logger.LogInformation($"{loggerName}: Received {nameof(notifications.Started)} for {e.TargetId} from {sender}");
+                _logger.LogInformation($"{loggerName}: Received {nameof(notifications.Started)} for {e.RequestId} from {sender}");
             };
         }
 
         private static async Task CreateServerAsync(INotifierSerialiser jsonSerialiser)
         {
-            var notifier = new Notifier<CalculationNotifications>(new NotifierSettings("https://localhost:7062/NotificationHub", NotifierPurpose.Transmitter, jsonSerialiser, false), _loggerFactory.CreateLogger("Server"));
+            var notifier = new Notifier<CalculationNotification>(new NotifierSettings("https://localhost:7062/NotificationHub", NotifierPurpose.Transmitter, null, jsonSerialiser), _loggerFactory.CreateLogger("Server"));
             var notifications = await notifier.ConnectAsync();
             
             while (true)
@@ -91,11 +91,11 @@ namespace ConsoleApp
 
                 var sender = new FakeSender { SenderId = 5 };
 
-                notifications.RaiseStarted(sender, new StartedEventArgs { TargetId = 555 });
+                notifications.RaiseStarted(sender, new StartedEventArgs { RequestId = 555 });
 
                 await Task.Delay(2000).ContinueWith(t =>
                 {
-                    notifications.RaiseFinished(sender, new FinishedEventArgs { TargetId = 555 });
+                    notifications.RaiseFinished(sender, new FinishedEventArgs { RequestId = 555 });
                 });
             }
         }

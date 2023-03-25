@@ -6,14 +6,14 @@ namespace ClassLibrary1
 
     public class CalculationNotificationEventArgs : EventArgs
     {
-        public int TargetId { get; set; }
+        public int RequestId { get; set; }
     }
 
     public class StartedEventArgs : CalculationNotificationEventArgs { }
     public class ErroredEventArgs: CalculationNotificationEventArgs { }
     public class FinishedEventArgs : CalculationNotificationEventArgs { }
  
-    public class CalculationNotifications
+    public class CalculationNotification
     {
         public event EventHandler<StartedEventArgs> Started;
         public event EventHandler<FinishedEventArgs> Finished;

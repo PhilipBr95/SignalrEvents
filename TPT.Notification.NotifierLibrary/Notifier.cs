@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace TPT.Notification.NotifierLibrary
 {
-    public class Notifier<T> where T : new()
+    public class Notifier<T> : IAsyncDisposable where T : new()
     {
         private readonly NotifierSettings _notifierSettings;
         private readonly ILogger? _logger;
@@ -12,6 +12,8 @@ namespace TPT.Notification.NotifierLibrary
         private HubConnection _connection;
         private T _notifierEvents;        
         private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>();
+        public string? ConnectionId => _connection.ConnectionId;
+
 
         public Notifier(NotifierSettings notifierSettings, ILogger<Notifier<T>>? logger)
         {
@@ -41,6 +43,12 @@ namespace TPT.Notification.NotifierLibrary
 
                 _connection.Closed += async (error) =>
                 {
+                    if (error == null)
+                    {
+                        _logger?.LogDebug($"Safely Disconnected");
+                        return;
+                    }
+
                     _logger?.LogWarning($"Disconnected with {error}");
                     await Task.Delay(new Random().Next(0, 5) * 1000);
 
@@ -94,9 +102,9 @@ namespace TPT.Notification.NotifierLibrary
                                  if (_connection.State != HubConnectionState.Connected)
                                      throw new InvalidOperationException("Failed to connect!!");
 
-                                 _logger?.LogInformation($"Connected...");
+                                 _logger?.LogDebug($"Connected...");
 
-                                 _logger?.LogInformation($"Joining the group {_eventGroup}");
+                                 _logger?.LogInformation($"Joining the group '{_eventGroup}'");
                                  _connection.InvokeAsync("JoinGroup", _eventGroup);
                              });
         }
@@ -141,7 +149,7 @@ namespace TPT.Notification.NotifierLibrary
 
             //It's async - don't care about waiting
             if(_notifierSettings.IsPrivate)
-                _connection.InvokeAsync("RaiseClientGroupEvent", sender, _connection.ConnectionId, _eventGroup, handler.EventName, json);
+                _connection.InvokeAsync("RaiseClientGroupEvent", sender, _notifierSettings.ConnectionId, _eventGroup, handler.EventName, json);
             else
                 _connection.InvokeAsync("RaiseGroupEvent", sender, _eventGroup, handler.EventName, json);
         }
@@ -198,6 +206,14 @@ namespace TPT.Notification.NotifierLibrary
                 _logger?.LogError(ex, $"Is {evt.Name} missing an EventArgs?");
                 throw;
             }          
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await _connection.DisposeAsync();
+            
+            // Suppress finalization.
+            GC.SuppressFinalize(this);
         }
     }
 }
