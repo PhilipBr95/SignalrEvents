@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text.Json;
-using TPT.Notification.NotifierLibrary;
+using Notification.NotifierLibrary;
 using static ConsoleApp4.RequestNotification;
 
 namespace ConsoleApp4
@@ -93,14 +93,6 @@ namespace ConsoleApp4
 
         private static async Task CreateServerAsync()
         {
-            //var reciever = new Notifier<RequestNotification>(new NotifierSettings("https://localhost:5001/NotificationHub", NotifierPurpose.Receiver, false), _loggerFactory.CreateLogger("Client"));
-            //var recieverNotifications = await reciever.ConnectAsync();
-
-            //recieverNotifications.ProcessingRequired += (object? sender, ProcessingRequiredEventArgs e) =>
-            //{
-            //    _logger.LogInformation($"ProcessingRequired for {e.} from {sender}");
-            //};
-
             var logger = _loggerFactory.CreateLogger("Server");
             logger.LogInformation($"Server running");
 
@@ -111,7 +103,6 @@ namespace ConsoleApp4
                 {
                     Thread.Sleep(500);
                     continue;
-
                 }
 
                 logger.LogInformation($"Received 'RequestId {_request.RequestId}'");

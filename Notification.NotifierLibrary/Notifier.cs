@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 
-namespace TPT.Notification.NotifierLibrary
+namespace Notification.NotifierLibrary
 {
     public class Notifier<T> : IAsyncDisposable where T : new()
     {
@@ -13,7 +14,6 @@ namespace TPT.Notification.NotifierLibrary
         private T _notifierEvents;        
         private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>();
         public string? ConnectionId => _connection.ConnectionId;
-
 
         public Notifier(NotifierSettings notifierSettings, ILogger<Notifier<T>>? logger)
         {

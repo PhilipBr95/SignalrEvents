@@ -1,6 +1,6 @@
 ﻿using ClassLibrary1;
 using Microsoft.Extensions.Logging;
-using TPT.Notification.NotifierLibrary;
+using Notification.NotifierLibrary;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 

@@ -13,7 +13,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\ClassLibrary1\ClassLibrary1.csproj" />
-		<ProjectReference Include="..\TPT.Notification.NotifierLibrary\TPT.Notification.NotifierLibrary.csproj" />
+		<ProjectReference Include="..\Notification.NotifierLibrary\Notification.NotifierLibrary.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿namespace TPT.Notification.NotifierLibrary
+﻿namespace Notification.NotifierLibrary
 {
     public class NotifierSettings
     {

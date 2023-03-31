@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace TPT.Notification.NotifierLibrary
+namespace Notification.NotifierLibrary
 {
     internal class DefaultSerialiser : INotifierSerialiser
     {

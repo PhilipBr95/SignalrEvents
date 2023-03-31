@@ -1,4 +1,4 @@
-﻿namespace TPT.Notification.NotifierLibrary
+﻿namespace Notification.NotifierLibrary
 {
     [Flags]
     public enum NotifierPurpose

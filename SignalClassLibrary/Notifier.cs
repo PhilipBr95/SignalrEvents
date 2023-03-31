@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 
-namespace TPT.Notification.NotifierLibrary
+namespace Notification.NotifierLibrary
 {
     public class Notifier<T> where T : new()
     {

@@ -1,4 +1,7 @@
-namespace TPT.Notification.NotificationServer
+using Microsoft.AspNetCore.SignalR;
+using Notification.NotificationServer.Extensions;
+
+namespace Notification.NotificationServer
 {
     public class Program
     {
@@ -13,9 +16,19 @@ namespace TPT.Notification.NotificationServer
             });
 
             // Add services to the container.
-
+            //builder.Services.AddLogging
             builder.Services.AddControllers();
             builder.Services.AddSignalR();
+            builder.Services.AddRabbitMqBackPlane(config =>
+            {
+                //config.AddHub<NotificationHub>();
+                config.UsingRabbitMq((cfg) =>
+                 {
+                     cfg.Host = "localhost";
+                     cfg.Username = "guest";
+                     cfg.Password = "guest";
+                 });
+            });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -29,7 +42,7 @@ namespace TPT.Notification.NotificationServer
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-
+            
             app.UseAuthorization();
 
             app.MapHub<NotificationHub>($"/{nameof(NotificationHub)}");
@@ -39,5 +52,13 @@ namespace TPT.Notification.NotificationServer
 
             app.Run();
         }
+    }
+
+ 
+    public class BroadcastMessage
+    {
+        public string EventGroup { get; set; }
+        public string EventName { get; set; }
+        public object Data { get; set; }
     }
 }

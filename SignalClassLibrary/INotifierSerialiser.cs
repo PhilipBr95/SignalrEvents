@@ -1,4 +1,4 @@
-﻿namespace TPT.Notification.NotifierLibrary
+﻿namespace Notification.NotifierLibrary
 {
     /// <summary>
     /// To handle the switchover from Newtonsoft to Text.Json

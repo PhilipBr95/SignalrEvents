@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using TPT.Notification.NotifierLibrary;
+using Notification.NotifierLibrary;
 
 namespace ConsoleApp3
 {
