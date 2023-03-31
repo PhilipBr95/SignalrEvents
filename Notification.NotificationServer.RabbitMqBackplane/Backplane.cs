@@ -1,15 +1,13 @@
-﻿using Microsoft.Extensions.Options;
-using RabbitMQ.Client;
+﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Data.Common;
-using System.Diagnostics.Metrics;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Channels;
-using Notification.NotificationServer.Extensions;
+using Microsoft.Extensions.Logging;
+using Notification.NotificationServer.Backplane.Interfaces;
+using Notification.NotificationServer.Backplane.Models;
+using Notification.NotificationServer.RabbitMqBackplane.Models;
 
-namespace Notification.NotificationServer.Backplance
+namespace Notification.NotificationServer.RabbitMqBackplane
 {
     public class Backplane : IBackplane
     {
@@ -20,7 +18,7 @@ namespace Notification.NotificationServer.Backplance
 
         private static int _messageCounter = 0;
 
-        public event EventHandler<BackplaneEvent> Received;
+        public event EventHandler<BackplaneEvent>? Received;
 
         public Backplane(IConnection connection, RabbitMqOptions options, ILogger<Backplane> logger)
         {
@@ -42,7 +40,7 @@ namespace Notification.NotificationServer.Backplance
                 var message = JsonSerializer.Deserialize<BackplaneMessage>(json);
 
                 //We don't care about the message if it came from us
-                if (message != null && message.MessageId.StartsWith(_options.SubscriberName) == false)
+                if (message != null && message.MessageId.StartsWith(_options.QueueName) == false)
                     Received?.Invoke(this, new BackplaneEvent(message));
                 else
                     _logger?.LogDebug($"Ignore message {message.MessageId}");
@@ -56,7 +54,7 @@ namespace Notification.NotificationServer.Backplance
         public void Send(string command, MessageData messageData)
         {
             var backplaneMessage = new BackplaneMessage { Command = command, MessageData = messageData, MessageId = GenerateMessageId() };
-            _logger.LogInformation($"Sending {backplaneMessage.MessageId} to the Backplane");
+            _logger.LogInformation($"Sending {backplaneMessage.MessageId} to the RabbitMq Backplane");
 
             try
             {                                
@@ -82,7 +80,7 @@ namespace Notification.NotificationServer.Backplance
         private string GenerateMessageId()
         {
             var id = Interlocked.Increment(ref _messageCounter);
-            return $"{_options.SubscriberName}_{id}";
+            return $"{_options.QueueName}_{id}";
         }
     }
 }

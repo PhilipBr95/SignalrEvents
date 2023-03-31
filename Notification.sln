@@ -11,9 +11,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp", "ConsoleApp2\C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassLibrary1", "ClassLibrary1\ClassLibrary1.csproj", "{81A4C52C-6404-42B4-B315-EB803E5A963E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp3", "ConsoleApp3\ConsoleApp3.csproj", "{010B636D-ED4C-46A4-8327-A5DC9CAF47AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp3", "ConsoleApp3\ConsoleApp3.csproj", "{010B636D-ED4C-46A4-8327-A5DC9CAF47AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp4", "ConsoleApp4\ConsoleApp4.csproj", "{79F09866-59FA-4A79-8D7D-AF5DE6DFCFCE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp4", "ConsoleApp4\ConsoleApp4.csproj", "{79F09866-59FA-4A79-8D7D-AF5DE6DFCFCE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Notification.NotificationServer.Backplane", "Notification.Backplane\Notification.NotificationServer.Backplane.csproj", "{366A9C3B-6236-49B6-94FE-D4A215E46DB2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Notification.NotificationServer.RabbitMqBackplane", "Notification.NotificationServer.RabbitMqBackplane\Notification.NotificationServer.RabbitMqBackplane.csproj", "{34212B03-0324-49A4-9A24-B71642A4145F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +49,14 @@ Global
 		{79F09866-59FA-4A79-8D7D-AF5DE6DFCFCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79F09866-59FA-4A79-8D7D-AF5DE6DFCFCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79F09866-59FA-4A79-8D7D-AF5DE6DFCFCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{366A9C3B-6236-49B6-94FE-D4A215E46DB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{366A9C3B-6236-49B6-94FE-D4A215E46DB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{366A9C3B-6236-49B6-94FE-D4A215E46DB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{366A9C3B-6236-49B6-94FE-D4A215E46DB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34212B03-0324-49A4-9A24-B71642A4145F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34212B03-0324-49A4-9A24-B71642A4145F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34212B03-0324-49A4-9A24-B71642A4145F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34212B03-0324-49A4-9A24-B71642A4145F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

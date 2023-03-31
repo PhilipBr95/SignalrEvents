@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.SignalR;
-using Notification.NotificationServer.Extensions;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Notification.NotificationServer.RabbitMqBackplane.Extensions;
+using Notification.NotificationServer.RabbitMqBackplane.Models;
 
 namespace Notification.NotificationServer
 {
@@ -18,17 +21,8 @@ namespace Notification.NotificationServer
             // Add services to the container.
             //builder.Services.AddLogging
             builder.Services.AddControllers();
-            builder.Services.AddSignalR();
-            builder.Services.AddRabbitMqBackPlane(config =>
-            {
-                //config.AddHub<NotificationHub>();
-                config.UsingRabbitMq((cfg) =>
-                 {
-                     cfg.Host = "localhost";
-                     cfg.Username = "guest";
-                     cfg.Password = "guest";
-                 });
-            });
+            builder.Services.AddSignalR()
+                            .AddRabbitMqBackplane(builder.Configuration.GetSection("RabbitMqBackplane"));
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

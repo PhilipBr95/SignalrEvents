@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using System;
-using System.Text.RegularExpressions;
-using Notification.NotificationServer.Backplance;
+using Notification.NotificationServer.Backplane.Interfaces;
+using Notification.NotificationServer.Backplane.Models;
 
 namespace Notification.NotificationServer
 {
