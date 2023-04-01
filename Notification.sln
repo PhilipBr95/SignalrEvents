@@ -15,9 +15,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp3", "ConsoleApp3\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp4", "ConsoleApp4\ConsoleApp4.csproj", "{79F09866-59FA-4A79-8D7D-AF5DE6DFCFCE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Notification.NotificationServer.Backplane", "Notification.Backplane\Notification.NotificationServer.Backplane.csproj", "{366A9C3B-6236-49B6-94FE-D4A215E46DB2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notification.NotificationServer.Backplane", "Notification.NotificationServer.Backplane\Notification.NotificationServer.Backplane.csproj", "{366A9C3B-6236-49B6-94FE-D4A215E46DB2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Notification.NotificationServer.RabbitMqBackplane", "Notification.NotificationServer.RabbitMqBackplane\Notification.NotificationServer.RabbitMqBackplane.csproj", "{34212B03-0324-49A4-9A24-B71642A4145F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notification.NotificationServer.RabbitMqBackplane", "Notification.NotificationServer.RabbitMqBackplane\Notification.NotificationServer.RabbitMqBackplane.csproj", "{34212B03-0324-49A4-9A24-B71642A4145F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{039186A5-7BA0-4AEF-9C11-04CAC26F758B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,6 +62,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F64ED0DF-37A3-4CB1-8D7F-CEE5D8797ABE} = {039186A5-7BA0-4AEF-9C11-04CAC26F758B}
+		{81A4C52C-6404-42B4-B315-EB803E5A963E} = {039186A5-7BA0-4AEF-9C11-04CAC26F758B}
+		{010B636D-ED4C-46A4-8327-A5DC9CAF47AB} = {039186A5-7BA0-4AEF-9C11-04CAC26F758B}
+		{79F09866-59FA-4A79-8D7D-AF5DE6DFCFCE} = {039186A5-7BA0-4AEF-9C11-04CAC26F758B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {383CBDCE-FB48-4CC7-8DB5-9C650929F5D3}

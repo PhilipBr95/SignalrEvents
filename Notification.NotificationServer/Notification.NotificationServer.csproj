@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Notification.Backplane\Notification.NotificationServer.Backplane.csproj" />
+    <ProjectReference Include="..\Notification.NotificationServer.Backplane\Notification.NotificationServer.Backplane.csproj" />
     <ProjectReference Include="..\Notification.NotificationServer.RabbitMqBackplane\Notification.NotificationServer.RabbitMqBackplane.csproj" />
     <ProjectReference Include="..\Notification.NotifierLibrary\Notification.NotifierLibrary.csproj" />
   </ItemGroup>

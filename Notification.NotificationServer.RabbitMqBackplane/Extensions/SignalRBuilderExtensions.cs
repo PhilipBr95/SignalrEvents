@@ -44,7 +44,7 @@ namespace Notification.NotificationServer.RabbitMqBackplane.Extensions
                 var options = sp.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
                 var logger = sp.GetRequiredService<ILogger<ISignalRBuilder>>();
 
-                //Temporary connection
+                //Temporary connection to create Queues
                 using var channel = connection.CreateModel();
 
                 channel.ExchangeDeclare(exchange: options.ExchangeName, type: ExchangeType.Fanout);

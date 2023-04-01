@@ -41,9 +41,12 @@ namespace Notification.NotificationServer.RabbitMqBackplane
 
                 //We don't care about the message if it came from us
                 if (message != null && message.MessageId.StartsWith(_options.QueueName) == false)
+                {
+                    _logger?.LogDebug($"Received message {message.MessageId} from RabbitMq Backplane");
                     Received?.Invoke(this, new BackplaneEvent(message));
+                }
                 else
-                    _logger?.LogDebug($"Ignore message {message.MessageId}");
+                    _logger?.LogDebug($"Ignoring message {message.MessageId} from RabbitMq Backplane");
             };
 
             _channel.BasicConsume(queue: _options.QueueName,
@@ -54,7 +57,7 @@ namespace Notification.NotificationServer.RabbitMqBackplane
         public void Send(string command, MessageData messageData)
         {
             var backplaneMessage = new BackplaneMessage { Command = command, MessageData = messageData, MessageId = GenerateMessageId() };
-            _logger.LogInformation($"Sending {backplaneMessage.MessageId} to the RabbitMq Backplane");
+            _logger.LogDebug($"Sending message {backplaneMessage.MessageId} to the RabbitMq Backplane");
 
             try
             {                                
