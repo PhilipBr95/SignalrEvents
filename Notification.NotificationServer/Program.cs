@@ -1,8 +1,4 @@
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Notification.NotificationServer.RabbitMqBackplane.Extensions;
-using Notification.NotificationServer.RabbitMqBackplane.Models;
 
 namespace Notification.NotificationServer
 {
@@ -46,13 +42,5 @@ namespace Notification.NotificationServer
 
             app.Run();
         }
-    }
-
- 
-    public class BroadcastMessage
-    {
-        public string EventGroup { get; set; }
-        public string EventName { get; set; }
-        public object Data { get; set; }
     }
 }

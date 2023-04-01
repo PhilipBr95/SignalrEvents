@@ -7,13 +7,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notification.NotifierLibrar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notification.NotificationServer", "Notification.NotificationServer\Notification.NotificationServer.csproj", "{104A94BF-7EE8-4061-97F4-B50AC15C53CC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp", "ConsoleApp2\ConsoleApp.csproj", "{F64ED0DF-37A3-4CB1-8D7F-CEE5D8797ABE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp", "Tests\ConsoleApp2\ConsoleApp.csproj", "{F64ED0DF-37A3-4CB1-8D7F-CEE5D8797ABE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassLibrary1", "ClassLibrary1\ClassLibrary1.csproj", "{81A4C52C-6404-42B4-B315-EB803E5A963E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassLibrary1", "Tests\ClassLibrary1\ClassLibrary1.csproj", "{81A4C52C-6404-42B4-B315-EB803E5A963E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp3", "ConsoleApp3\ConsoleApp3.csproj", "{010B636D-ED4C-46A4-8327-A5DC9CAF47AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp3", "Tests\ConsoleApp3\ConsoleApp3.csproj", "{010B636D-ED4C-46A4-8327-A5DC9CAF47AB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp4", "ConsoleApp4\ConsoleApp4.csproj", "{79F09866-59FA-4A79-8D7D-AF5DE6DFCFCE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp4", "Tests\ConsoleApp4\ConsoleApp4.csproj", "{79F09866-59FA-4A79-8D7D-AF5DE6DFCFCE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notification.NotificationServer.Backplane", "Notification.NotificationServer.Backplane\Notification.NotificationServer.Backplane.csproj", "{366A9C3B-6236-49B6-94FE-D4A215E46DB2}"
 EndProject

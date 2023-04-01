@@ -24,9 +24,7 @@ namespace Notification.NotificationServer.RabbitMqBackplane.Extensions
                                            if (string.IsNullOrWhiteSpace(opt.QueueNameFormat))
                                                throw new InvalidDataException($"Missing {nameof(opt.QueueName)} or {nameof(opt.QueueNameFormat)}");
 
-                                           opt.QueueName = opt.QueueNameFormat.Replace("{ExchangeName}", opt.ExchangeName )
-                                                                              .Replace("{Guid}", Guid.NewGuid().ToString()[0..8])
-                                                                              .Replace("{Hostname}", System.Net.Dns.GetHostName());
+                                           opt.QueueName = FormatQueueName(opt.QueueNameFormat, opt.ExchangeName);
                                        }
                                    });
 
@@ -58,6 +56,13 @@ namespace Notification.NotificationServer.RabbitMqBackplane.Extensions
             });
 
             return signalRBuilder;
+        }
+
+        private static string FormatQueueName(string queueNameFormat, string exchangeName)
+        {
+            return queueNameFormat.Replace("{ExchangeName}", exchangeName)
+                                  .Replace("{Guid}", Guid.NewGuid().ToString()[0..8])
+                                  .Replace("{Hostname}", System.Net.Dns.GetHostName());
         }
     }
 }
