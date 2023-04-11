@@ -1,4 +1,4 @@
-﻿namespace Notification.NotificationServer.RabbitMqBackplane.Models
+﻿namespace Notification.NotificationServer.Backplane.RabbitMq.Models
 {
     public class RabbitMqOptions
     {

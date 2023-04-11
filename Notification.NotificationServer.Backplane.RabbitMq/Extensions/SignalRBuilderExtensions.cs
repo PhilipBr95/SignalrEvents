@@ -3,16 +3,30 @@ using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.SignalR;
-using Notification.NotificationServer.RabbitMqBackplane.Models;
+using Notification.NotificationServer.Backplane.RabbitMq.Models;
 using Notification.NotificationServer.Backplane.Interfaces;
-using Notification.NotificationServer.RabbitMqBackplane.Interfaces;
+using Notification.NotificationServer.Backplane.RabbitMq.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Notification.NotificationServer.RabbitMqBackplane.Extensions
+namespace Notification.NotificationServer.Backplane.RabbitMq.Extensions
 {
     public static class SignalRBuilderExtensions
     {
-        public static ISignalRBuilder AddRabbitMqBackplane(this ISignalRBuilder signalRBuilder, IConfigurationSection configurationSection)
+        public static ISignalRBuilder AddRabbitMqBackplane<THub>(this ISignalRBuilder signalRBuilder, IConfigurationSection configurationSection) where THub : Hub
+        {
+            AddRabbitMqConfig(signalRBuilder, configurationSection);
+
+            LogBackplaneConfig(signalRBuilder);
+
+            AddRabbitMq(signalRBuilder);
+
+            ConfigureRabbitMqBackplane<THub>(signalRBuilder);
+
+            return signalRBuilder;
+        }
+
+        private static void AddRabbitMqConfig(ISignalRBuilder signalRBuilder, IConfigurationSection configurationSection)
         {
             signalRBuilder.Services.AddOptions<RabbitMqOptions>()
                                    .Bind(configurationSection)
@@ -27,15 +41,11 @@ namespace Notification.NotificationServer.RabbitMqBackplane.Extensions
                                            opt.QueueName = FormatQueueName(opt.QueueNameFormat, opt.ExchangeName);
                                        }
                                    });
+        }
 
-            signalRBuilder.Services.AddSingleton<IRabbitMqConnectionFactory>((sp) =>
-            {
-                var options = sp.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
-                var factory = new ConnectionFactory { HostName = options.Host, UserName = options.Username, Password = options.Password };
-                return new BackplaneRabbitMqConnectionFactory(factory);
-            });
-
-            signalRBuilder.Services.AddSingleton<IBackplane>((sp) =>
+        private static void ConfigureRabbitMqBackplane<THub>(ISignalRBuilder signalRBuilder) where THub : Hub
+        {
+            signalRBuilder.Services.TryAddSingleton<IBackplane<THub>>((sp) =>
             {
                 var factory = sp.GetRequiredService<IRabbitMqConnectionFactory>();
                 var connection = factory.Connection.CreateConnection();
@@ -51,11 +61,32 @@ namespace Notification.NotificationServer.RabbitMqBackplane.Extensions
 
                 logger.LogInformation($"Queue {options.QueueName} bound to {options.ExchangeName}");
 
-                var backPlane = new Backplane(connection, options, sp.GetRequiredService<ILogger<Backplane>>());
+                var hubContext = sp.GetRequiredService<IHubContext<THub>>();
+                var backPlane = new Backplane<THub>(hubContext, connection, options, sp.GetRequiredService<ILogger<IBackplane<THub>>>());
+
                 return backPlane;
             });
+        }
 
-            return signalRBuilder;
+        private static void AddRabbitMq(ISignalRBuilder signalRBuilder)
+        {
+            signalRBuilder.Services.TryAddSingleton<IRabbitMqConnectionFactory>((sp) =>
+            {
+                var options = sp.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
+                var factory = new ConnectionFactory { HostName = options.Host, UserName = options.Username, Password = options.Password };
+                return new BackplaneRabbitMqConnectionFactory(factory);
+            });
+        }
+
+        private static void LogBackplaneConfig(ISignalRBuilder signalRBuilder)
+        {
+            var tempSp = signalRBuilder.Services.BuildServiceProvider();
+            var opt = tempSp.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
+            
+            var logger = tempSp.GetRequiredService<ILoggerFactory>()
+                               .CreateLogger(typeof(SignalRBuilderExtensions));
+
+            logger.LogInformation($"Using '{opt.Host}' for the Backplane");
         }
 
         private static string FormatQueueName(string queueNameFormat, string exchangeName)

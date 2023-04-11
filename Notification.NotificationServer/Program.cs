@@ -1,4 +1,5 @@
-using Notification.NotificationServer.RabbitMqBackplane.Extensions;
+using Notification.NotificationServer.Backplane.RabbitMq.Extensions;
+using System.Reflection;
 
 namespace Notification.NotificationServer
 {
@@ -18,7 +19,7 @@ namespace Notification.NotificationServer
             //builder.Services.AddLogging
             builder.Services.AddControllers();
             builder.Services.AddSignalR()
-                            .AddRabbitMqBackplane(builder.Configuration.GetSection("RabbitMqBackplane"));
+                            .AddRabbitMqBackplane<NotificationHub>(builder.Configuration.GetSection("RabbitMqBackplane"));
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -36,6 +37,7 @@ namespace Notification.NotificationServer
             app.UseAuthorization();
 
             app.MapHub<NotificationHub>($"/{nameof(NotificationHub)}");
+            app.Logger.LogInformation($"Version {Assembly.GetExecutingAssembly().GetName().Version}");
             app.Logger.LogInformation($"Listening @ /{nameof(NotificationHub)}");
 
             app.MapControllers();

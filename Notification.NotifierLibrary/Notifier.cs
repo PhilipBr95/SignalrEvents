@@ -13,6 +13,8 @@ namespace Notification.NotifierLibrary
         private HubConnection _connection;
         private T _notifierEvents;        
         private Dictionary<string, EventHandler> _eventHandlers = new Dictionary<string, EventHandler>();
+        private NotifierPurpose _purpose;
+
         public string? ConnectionId => _connection.ConnectionId;
 
         public Notifier(NotifierSettings notifierSettings, ILogger<Notifier<T>>? logger)
@@ -31,9 +33,9 @@ namespace Notification.NotifierLibrary
         {
             try
             {
-                var purpose = _notifierSettings.Purpose;
+                _purpose = _notifierSettings.Purpose;
 
-                if (purpose.HasFlag(NotifierPurpose.Receiver) && purpose.HasFlag(NotifierPurpose.Transmitter))
+                if (_purpose.HasFlag(NotifierPurpose.Receiver) && _purpose.HasFlag(NotifierPurpose.Transmitter))
                     _logger?.LogWarning($"Having {nameof(NotifierPurpose.Receiver)} and {nameof(NotifierPurpose.Transmitter)} will cause a feedback loop!!");
 
                 _connection = new HubConnectionBuilder()
@@ -56,17 +58,16 @@ namespace Notification.NotifierLibrary
                     await ConnectAndJoinGroup();
                 };
 
-                _logger?.LogInformation($"Connecting to {_notifierSettings.Url} as a [{purpose}]");
                 await ConnectAndJoinGroup();
                 
                 _notifierEvents = new T();
 
                 //Configure receiving messages
-                if (purpose.HasFlag(NotifierPurpose.Receiver))
+                if (_purpose.HasFlag(NotifierPurpose.Receiver))
                     _connection.On<object, string, string, object>("RaiseEvent", (sender, eventGroup, eventName, data) => PublishEventLocally(sender, eventGroup, eventName, data));
 
                 //Configure sending messages
-                if (purpose.HasFlag(NotifierPurpose.Transmitter))
+                if (_purpose.HasFlag(NotifierPurpose.Transmitter))
                 {
                     var events = typeof(T).GetEvents();
                     foreach (var evt in events)
@@ -96,13 +97,15 @@ namespace Notification.NotifierLibrary
 
         private async Task ConnectAndJoinGroup()
         {
+            _logger?.LogInformation($"Connecting to {_notifierSettings.Url} as a [{_purpose}] for {_eventGroup}");
+
             await _connection.StartAsync()
                              .ContinueWith((t) =>
                              {
                                  if (_connection.State != HubConnectionState.Connected)
                                      throw new InvalidOperationException("Failed to connect!!");
 
-                                 _logger?.LogDebug($"Connected...");
+                                 _logger?.LogInformation($"Connected as {_connection.ConnectionId} for {_eventGroup}");
 
                                  _logger?.LogInformation($"Joining the group '{_eventGroup}'");
                                  _connection.InvokeAsync("JoinGroup", _eventGroup);
@@ -145,7 +148,7 @@ namespace Notification.NotifierLibrary
             var json = _notifierSettings.Serialiser.Serialise(args);
             var handler = _eventHandlers[typeof(TArgs).FullName];
 
-            _logger?.LogInformation($"Sending {_eventGroup}=>{handler.EventName} - {json}");
+            _logger?.LogInformation($"Sending {_eventGroup}=>{handler.EventName} - {json} to {_notifierSettings.Url}");
 
             //It's async - don't care about waiting
             if(_notifierSettings.IsPrivate)
@@ -163,7 +166,7 @@ namespace Notification.NotifierLibrary
         public void PublishEventLocally(object sender, string eventGroup, string eventName, object data)
         {
             string json = data?.ToString();
-            _logger?.LogDebug($"Received event {eventGroup}=>{eventName} from {sender} - {json}");
+            _logger?.LogInformation($"Received event {eventGroup}=>{eventName} from {sender} - {json}");
 
             var evt = typeof(T).GetEvent(eventName);
 

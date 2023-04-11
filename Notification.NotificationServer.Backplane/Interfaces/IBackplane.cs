@@ -1,11 +1,11 @@
-﻿using Notification.NotificationServer.Backplane.Models;
+﻿using Microsoft.AspNetCore.SignalR;
+using Notification.NotificationServer.Backplane.Models;
 
 namespace Notification.NotificationServer.Backplane.Interfaces
 {
-    public interface IBackplane
+    public interface IBackplane<THub> where THub : Hub
     {
-        void Send(string command, MessageData messageCata);
-
-        event EventHandler<BackplaneEvent> Received;
+        void Send(string connectionId, string command, MessageData messageCata);
+        void AddReceived(Action<object, IHubContext<THub>, BackplaneEvent> value);
     }
 }

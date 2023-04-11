@@ -1,6 +1,6 @@
 ﻿using RabbitMQ.Client;
 
-namespace Notification.NotificationServer.RabbitMqBackplane.Interfaces
+namespace Notification.NotificationServer.Backplane.RabbitMq.Interfaces
 {
     public interface IRabbitMqConnectionFactory
     {

@@ -3,28 +3,30 @@ using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Notification.NotificationServer.Backplane.Interfaces;
 using Notification.NotificationServer.Backplane.Models;
-using Notification.NotificationServer.RabbitMqBackplane.Models;
+using Notification.NotificationServer.Backplane.RabbitMq.Models;
+using Microsoft.AspNetCore.SignalR;
+using Notification.NotificationServer.Backplane.Interfaces;
 
-namespace Notification.NotificationServer.RabbitMqBackplane
+namespace Notification.NotificationServer.Backplane.RabbitMq
 {
-    public class Backplane : IBackplane
+    public class Backplane<THub> : IBackplane<THub> where THub : Hub
     {
-        private IConnection _connection;
-        private RabbitMqOptions _options;
-        private ILogger<Backplane> _logger;
-        private IModel _channel;
+        private readonly IConnection _connection;
+        private readonly RabbitMqOptions _options;
+        private readonly ILogger<IBackplane<THub>> _logger;
+        private readonly IHubContext<THub> _hubContext;
+        private readonly IModel _channel;
+        private Action<object, IHubContext<THub>, BackplaneEvent>? _receivedHandler = null;
 
         private static int _messageCounter = 0;
-
-        public event EventHandler<BackplaneEvent>? Received;
-
-        public Backplane(IConnection connection, RabbitMqOptions options, ILogger<Backplane> logger)
+        
+        public Backplane(IHubContext<THub> hubContext, IConnection connection, RabbitMqOptions options, ILogger<IBackplane<THub>> logger)
         {
             _connection = connection;
             _options = options;
             _logger = logger;
+            _hubContext = hubContext;
 
             _channel = _connection.CreateModel();
             Subscribe();
@@ -43,7 +45,8 @@ namespace Notification.NotificationServer.RabbitMqBackplane
                 if (message != null && message.MessageId.StartsWith(_options.QueueName) == false)
                 {
                     _logger?.LogDebug($"Received message {message.MessageId} from RabbitMq Backplane");
-                    Received?.Invoke(this, new BackplaneEvent(message));
+
+                    _receivedHandler?.Invoke(this, _hubContext, new BackplaneEvent(message));
                 }
                 else
                     _logger?.LogDebug($"Ignoring message {message.MessageId} from RabbitMq Backplane");
@@ -54,9 +57,9 @@ namespace Notification.NotificationServer.RabbitMqBackplane
                                  consumer: consumer);
         }
 
-        public void Send(string command, MessageData messageData)
+        public void Send(string connectionId, string command, MessageData messageData)
         {
-            var backplaneMessage = new BackplaneMessage { Command = command, MessageData = messageData, MessageId = GenerateMessageId() };
+            var backplaneMessage = new BackplaneMessage { ConnectionId = connectionId, Command = command, MessageData = messageData, MessageId = GenerateMessageId() };
             _logger.LogDebug($"Sending message {backplaneMessage.MessageId} to the RabbitMq Backplane");
 
             try
@@ -85,5 +88,8 @@ namespace Notification.NotificationServer.RabbitMqBackplane
             var id = Interlocked.Increment(ref _messageCounter);
             return $"{_options.QueueName}_{id}";
         }
+
+        public void AddReceived(Action<object, IHubContext<THub>, BackplaneEvent> value) => _receivedHandler = value;
+
     }
 }
