@@ -51,10 +51,10 @@ namespace ConsoleApp4
             var server = new Server("https://localhost:5001/NotificationHub", _loggerFactory.CreateLogger("Server"));
             _ = server.StartAsync();
 
-            var client1 = new Client("https://localhost:5001/NotificationHub", 1, false, _loggerFactory.CreateLogger("Client1"));
+            var client1 = new Client("https://localhost:5001/NotificationHub", 1, _loggerFactory.CreateLogger("Client1"));
             _ = client1.StartAsync();
 
-            var client2 = new Client("http://localhost:8080/NotificationHub", 2, false, _loggerFactory.CreateLogger("Client2"));
+            var client2 = new Client("http://localhost:8080/NotificationHub", 2, _loggerFactory.CreateLogger("Client2"));
             _ = client2.StartAsync();
 
             var notifier = new Notifier<CalculationNotification>(new NotifierSettings("https://localhost:5001/NotificationHub", NotifierPurpose.Receiver), _logger);

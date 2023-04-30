@@ -62,7 +62,7 @@ namespace Notification.NotificationServer
             var backplane = _services.GetRequiredService<IBackplane<NotificationHub, NotifierEventArgs>>();
             var logger = _services.GetRequiredService<ILogger<StartupService>>();
 
-            logger.LogInformation($"Forced RabbitMq Connect: {backplane.ConsumerTag}");
+            logger.LogInformation($"Forcing RabbitMq connect: {backplane.ConsumerTag}");
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)

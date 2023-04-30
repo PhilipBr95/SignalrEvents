@@ -1,4 +1,6 @@
-﻿namespace Notification.NotifierLibrary
+﻿using System;
+
+namespace Notification.NotifierLibrary
 {
     /// <summary>
     /// To handle the switchover from Newtonsoft to Text.Json

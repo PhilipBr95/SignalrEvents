@@ -1,4 +1,6 @@
-﻿namespace Notification.NotifierLibrary
+﻿using System;
+
+namespace Notification.NotifierLibrary
 {
     internal class EventHandler
     {

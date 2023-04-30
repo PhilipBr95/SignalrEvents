@@ -1,8 +1,13 @@
 ﻿
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
 using System.Data.Common;
+using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Notification.NotifierLibrary
 {
@@ -121,6 +126,9 @@ namespace Notification.NotifierLibrary
 
             await _connection.StartAsync()
                              .ContinueWith(async (t) => await JoinGroupAsync());
+
+            if (_connection.State == HubConnectionState.Disconnected)
+                throw new Exception($"Failed to connect to {_notifierSettings.Url}");
         }
 
         private async Task JoinGroupAsync()
@@ -205,7 +213,7 @@ namespace Notification.NotifierLibrary
             var delegates = GetDelegates(myArgs.EventName);
 
             delegates?.ToList()
-                        .ForEach(fe => fe.DynamicInvoke(new object[] { myArgs.Sender, eventArg }));
+                      .ForEach(fe => fe.DynamicInvoke(new object[] { myArgs.Sender, eventArg }));
         }
 
 

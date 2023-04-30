@@ -36,7 +36,7 @@ namespace ConsoleApp3
 
         private static async Task CreateClientAsync(INotifierSerialiser jsonSerialiser)
         {
-            var notifier = new Notifier<CalculationNotification>(new NotifierSettings("https://localhost:5001/NotificationHub", NotifierPurpose.Receiver, null, null, jsonSerialiser), _loggerFactory.CreateLogger("Client"));
+            var notifier = new Notifier<CalculationNotification>(new NotifierSettings("https://localhost:5001/NotificationHub", NotifierPurpose.Receiver, null, jsonSerialiser), _loggerFactory.CreateLogger("Client"));
             var notifications = await notifier.ConnectAsync();
 
             notifications.Started += (object? sender, StartedEventArgs e) =>
@@ -54,7 +54,7 @@ namespace ConsoleApp3
 
         private static async Task CreateServerAsync(INotifierSerialiser jsonSerialiser)
         {
-            var notifier = new Notifier<CalculationNotification>(new NotifierSettings("https://localhost:5001/NotificationHub", NotifierPurpose.Transmitter, null, null, jsonSerialiser), _loggerFactory.CreateLogger("Client"));
+            var notifier = new Notifier<CalculationNotification>(new NotifierSettings("https://localhost:5001/NotificationHub", NotifierPurpose.Transmitter, null, jsonSerialiser), _loggerFactory.CreateLogger("Client"));
             var notifications = await notifier.ConnectAsync();
 
             while (true)

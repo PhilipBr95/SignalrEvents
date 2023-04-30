@@ -9,27 +9,22 @@ namespace ConsoleApp4
     {
         private readonly string _server;
         private readonly int _requestId;
-        private readonly bool _isPrivate;
         private readonly ILogger _logger;
         private Request _request;
 
-        public Client(string server, int requestId, bool isPrivate, ILogger logger)
+        public Client(string server, int requestId, ILogger logger)
         {
             _server = server;
             _requestId = requestId;
-            _isPrivate = isPrivate;
             _logger = logger;
         }
 
         public async Task StartAsync()
         {
-            var notifier = new Notifier<CalculationNotification>(new NotifierSettings(_server, NotifierPurpose.Receiver, null, _isPrivate), _logger);
+            var notifier = new Notifier<CalculationNotification>(new NotifierSettings(_server, NotifierPurpose.Receiver, null), _logger);
             var notifications = await notifier.ConnectAsync();
 
-            _logger.LogInformation($"Creating Notifier with isPrivate:{_isPrivate}");
-
-            NotificationSettings? settings = _isPrivate ? new NotificationSettings { ConnectionId = notifier.ConnectionId } : null;
-            var request = new Request { RequestId = _requestId, NotificationSettings = settings };
+            var request = new Request { RequestId = _requestId};
             request.Events = notifications;
 
             request.Events.Started += (object? sender, StartedEventArgs e) =>
@@ -48,7 +43,7 @@ namespace ConsoleApp4
 
         internal async Task SendAsync()
         {
-            await using (var requestNotifier = new Notifier<RequestNotification>(new NotifierSettings(_server, NotifierPurpose.Transmitter, null, _isPrivate), _logger))
+            await using (var requestNotifier = new Notifier<RequestNotification>(new NotifierSettings(_server, NotifierPurpose.Transmitter, null), _logger))
             {
                 var notifier = await requestNotifier.ConnectAsync();
                 notifier.RaiseProcessingRequired(this, new RequestNotification.ProcessingRequiredEventArgs {  RequestId = _requestId });
