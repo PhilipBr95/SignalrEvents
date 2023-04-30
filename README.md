@@ -26,4 +26,4 @@ It also implements a RabbitMq backplane to allow the SignalR Notification server
 ```
 
 ## Private Messages
-Private messages should be configured via the EventArgs
+Private messages should be handled via the EventArgs
