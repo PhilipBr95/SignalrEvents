@@ -24,3 +24,6 @@ It also implements a RabbitMq backplane to allow the SignalR Notification server
         
     notifications.RaiseStarted(new object(), new StartedEventArgs { RequestId = request.RequestId });
 ```
+
+## Private Messages
+Private messages should be configured via the EventArgs

@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
+using System.Data.Common;
 using System.Reflection;
 
 namespace Notification.NotifierLibrary
@@ -43,6 +44,25 @@ namespace Notification.NotifierLibrary
                     .WithAutomaticReconnect()
                 .Build();
 
+                _connection.Reconnecting += async (error) =>
+                {
+                    if (error == null)
+                    {
+                        _logger?.LogDebug($"Reconnecting for unknown reason");
+                        return;
+                    }
+
+                    _logger?.LogWarning($"Reconnecting due to {error}");
+                    await Task.CompletedTask;
+                };
+
+                _connection.Reconnected += async (connectionId) =>
+                {
+                    _logger?.LogDebug($"Reconnected...");
+
+                    await JoinGroupAsync();
+                };
+
                 _connection.Closed += async (error) =>
                 {
                     if (error == null)
@@ -54,17 +74,17 @@ namespace Notification.NotifierLibrary
                     _logger?.LogWarning($"Disconnected with {error}");
                     await Task.Delay(new Random().Next(0, 5) * 1000);
 
-                    _logger?.LogWarning($"Reconnecting...");
-                    await ConnectAndJoinGroup();
+                    _logger?.LogWarning($"Unexpectedly Closed...");
+                    await ConnectAndJoinGroupAsync();
                 };
 
-                await ConnectAndJoinGroup();
+                await ConnectAndJoinGroupAsync();
                 
                 _notifierEvents = new T();
 
                 //Configure receiving messages
                 if (_purpose.HasFlag(NotifierPurpose.Receiver))
-                    _connection.On<object, string, string, object>("RaiseEvent", (sender, eventGroup, eventName, data) => PublishEventLocally(sender, eventGroup, eventName, data));
+                    _connection.On<NotifierEventArgs>("RaiseEvent", (myArgs) => RaiseLocalEvent(myArgs));
 
                 //Configure sending messages
                 if (_purpose.HasFlag(NotifierPurpose.Transmitter))
@@ -95,21 +115,23 @@ namespace Notification.NotifierLibrary
             }
         }
 
-        private async Task ConnectAndJoinGroup()
+        private async Task ConnectAndJoinGroupAsync()
         {
             _logger?.LogInformation($"Connecting to {_notifierSettings.Url} as a [{_purpose}] for {_eventGroup}");
 
             await _connection.StartAsync()
-                             .ContinueWith((t) =>
-                             {
-                                 if (_connection.State != HubConnectionState.Connected)
-                                     throw new InvalidOperationException("Failed to connect!!");
+                             .ContinueWith(async (t) => await JoinGroupAsync());
+        }
 
-                                 _logger?.LogInformation($"Connected as {_connection.ConnectionId} for {_eventGroup}");
+        private async Task JoinGroupAsync()
+        {
+            if (_connection.State != HubConnectionState.Connected)
+                throw new InvalidOperationException("Not Connected!!");
 
-                                 _logger?.LogInformation($"Joining the group '{_eventGroup}'");
-                                 _connection.InvokeAsync("JoinGroup", _eventGroup);
-                             });
+            _logger?.LogInformation($"Connected as {_connection.ConnectionId} for {_eventGroup}");
+
+            _logger?.LogInformation($"Joining the group '{_eventGroup}'");
+            await _connection.InvokeAsync("JoinGroup", _eventGroup);
         }
 
         private EventHandler GetEventHandlerFor(EventInfo eventInfo)
@@ -117,10 +139,10 @@ namespace Notification.NotifierLibrary
             try
             {
                 var genericHandlerMethod = this.GetType()
-                                               .GetMethod(nameof(HandleRemoteEvent), BindingFlags.NonPublic | BindingFlags.Instance);
+                                               .GetMethod(nameof(RaiseRemoteEvent), BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (genericHandlerMethod == null)
-                    throw new NullReferenceException($"Failed to find {nameof(HandleRemoteEvent)}");
+                    throw new NullReferenceException($"Failed to find {nameof(RaiseRemoteEvent)}");
 
                 var argType = GetEventHandlerType(eventInfo);
                 var handlerMethod = genericHandlerMethod.MakeGenericMethod(argType);
@@ -143,45 +165,47 @@ namespace Notification.NotifierLibrary
         /// <typeparam name="TArgs"></typeparam>
         /// <param name="sender"></param>
         /// <param name="args"></param>
-        private void HandleRemoteEvent<TArgs>(object? sender, TArgs args) where TArgs : EventArgs
+        private void RaiseRemoteEvent<TArgs>(object? sender, TArgs args) where TArgs : EventArgs
         {
-            var json = _notifierSettings.Serialiser.Serialise(args);
-            var handler = _eventHandlers[typeof(TArgs).FullName];
+            try
+            {
+                var json = _notifierSettings.Serialiser.Serialise(args);
+                var handler = _eventHandlers[typeof(TArgs).FullName];
 
-            _logger?.LogInformation($"Sending {_eventGroup}=>{handler.EventName} - {json} to {_notifierSettings.Url}");
+                _logger?.LogInformation($"Sending {_eventGroup}=>{handler.EventName} - {json} to {_notifierSettings.Url}");
 
-            //It's async - don't care about waiting
-            if(_notifierSettings.IsPrivate)
-                _connection.InvokeAsync("RaiseClientGroupEvent", sender, _notifierSettings.ConnectionId, _eventGroup, handler.EventName, json);
-            else
-                _connection.InvokeAsync("RaiseGroupEvent", sender, _eventGroup, handler.EventName, json);
+                //It's async - don't care about waiting
+                _ = _connection.InvokeAsync("RaiseEvent", new NotifierEventArgs { Sender = sender?.ToString(), EventGroup = _eventGroup, EventName = handler.EventName, Json = json });
+            }
+            catch(Exception ex)
+            {
+                _logger?.LogError(ex, $"Error with {typeof(TArgs).FullName}");
+                throw;
+            }
         }
 
         /// <summary>
         /// Bubbles the server event to the client
         /// </summary>
-        /// <param name="eventGroup"></param>
-        /// <param name="eventName"></param>
-        /// <param name="json"></param>
-        public void PublishEventLocally(object sender, string eventGroup, string eventName, object data)
+        /// <param name="myArgs"></param>
+        public void RaiseLocalEvent(NotifierEventArgs myArgs)
         {
-            string json = data?.ToString();
-            _logger?.LogInformation($"Received event {eventGroup}=>{eventName} from {sender} - {json}");
+            _logger?.LogInformation($"Received event {myArgs.EventGroup}=>{myArgs.EventName} from {myArgs.Sender} - {myArgs.Json}");
 
-            var evt = typeof(T).GetEvent(eventName);
+            var evt = typeof(T).GetEvent(myArgs.EventName);
 
-            if(evt == null)
+            if (evt == null)
             {
-                _logger?.LogWarning($"Event {eventName} not found in {typeof(T).Name}");
+                _logger?.LogWarning($"Event {myArgs.EventName} not found in {typeof(T).Name}");
                 return;
             }
 
-            var eventArg = _notifierSettings.Serialiser.Deserialise(json, GetEventHandlerType(evt));
+            var eventArg = _notifierSettings.Serialiser.Deserialise(myArgs.Json, GetEventHandlerType(evt));
 
-            var delegates = GetDelegates(eventName);
+            var delegates = GetDelegates(myArgs.EventName);
 
             delegates?.ToList()
-                      .ForEach(fe => fe.DynamicInvoke(new object[] { sender, eventArg }));
+                        .ForEach(fe => fe.DynamicInvoke(new object[] { myArgs.Sender, eventArg }));
         }
 
 

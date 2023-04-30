@@ -13,7 +13,8 @@ namespace Notification.NotificationServer.Backplane.RabbitMq.Extensions
 {
     public static class SignalRBuilderExtensions
     {
-        public static ISignalRBuilder AddRabbitMqBackplane<THub>(this ISignalRBuilder signalRBuilder, IConfigurationSection configurationSection) where THub : Hub
+        public static ISignalRBuilder AddRabbitMqBackplane<THub, TMessage>(this ISignalRBuilder signalRBuilder, IConfigurationSection configurationSection) where THub : Hub
+                                                                                                                                                  where TMessage : class
         {
             AddRabbitMqConfig(signalRBuilder, configurationSection);
 
@@ -21,7 +22,7 @@ namespace Notification.NotificationServer.Backplane.RabbitMq.Extensions
 
             AddRabbitMq(signalRBuilder);
 
-            ConfigureRabbitMqBackplane<THub>(signalRBuilder);
+            ConfigureRabbitMqBackplane<THub, TMessage>(signalRBuilder);
 
             return signalRBuilder;
         }
@@ -43,9 +44,10 @@ namespace Notification.NotificationServer.Backplane.RabbitMq.Extensions
                                    });
         }
 
-        private static void ConfigureRabbitMqBackplane<THub>(ISignalRBuilder signalRBuilder) where THub : Hub
+        private static void ConfigureRabbitMqBackplane<THub, TMessage>(ISignalRBuilder signalRBuilder) where THub : Hub
+                                                                                                       where TMessage : class
         {
-            signalRBuilder.Services.TryAddSingleton<IBackplane<THub>>((sp) =>
+            signalRBuilder.Services.TryAddSingleton<IBackplane<THub, TMessage>>((sp) =>
             {
                 var factory = sp.GetRequiredService<IRabbitMqConnectionFactory>();
                 var connection = factory.Connection.CreateConnection();
@@ -62,7 +64,7 @@ namespace Notification.NotificationServer.Backplane.RabbitMq.Extensions
                 logger.LogInformation($"Queue {options.QueueName} bound to {options.ExchangeName}");
 
                 var hubContext = sp.GetRequiredService<IHubContext<THub>>();
-                var backPlane = new Backplane<THub>(hubContext, connection, options, sp.GetRequiredService<ILogger<IBackplane<THub>>>());
+                var backPlane = new Backplane<THub, TMessage>(hubContext, connection, options, sp.GetRequiredService<ILogger<IBackplane<THub, TMessage>>>());
 
                 return backPlane;
             });

@@ -1,4 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
+using Notification.NotificationServer.Backplane.Interfaces;
 using Notification.NotificationServer.Backplane.RabbitMq.Extensions;
+using Notification.NotifierLibrary;
 using System.Reflection;
 
 namespace Notification.NotificationServer
@@ -16,10 +19,10 @@ namespace Notification.NotificationServer
             });
 
             // Add services to the container.
-            //builder.Services.AddLogging
+            builder.Services.AddHostedService<StartupService>();
             builder.Services.AddControllers();
             builder.Services.AddSignalR()
-                            .AddRabbitMqBackplane<NotificationHub>(builder.Configuration.GetSection("RabbitMqBackplane"));
+                            .AddRabbitMqBackplane<NotificationHub, NotifierEventArgs>(builder.Configuration.GetSection("RabbitMqBackplane"));
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -41,8 +44,31 @@ namespace Notification.NotificationServer
             app.Logger.LogInformation($"Listening @ /{nameof(NotificationHub)}");
 
             app.MapControllers();
-
             app.Run();
         }
     }
+
+    public class StartupService : IHostedService
+    {
+        private IServiceProvider _services;
+        public StartupService(IServiceProvider services)
+        {
+            _services = services;
+        }
+
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            //Check Rabbit
+            var backplane = _services.GetRequiredService<IBackplane<NotificationHub, NotifierEventArgs>>();
+            var logger = _services.GetRequiredService<ILogger<StartupService>>();
+
+            logger.LogInformation($"Forced RabbitMq Connect: {backplane.ConsumerTag}");
+        }
+
+        public async Task StopAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 }

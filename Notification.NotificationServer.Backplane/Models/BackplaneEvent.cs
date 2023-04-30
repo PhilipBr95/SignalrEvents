@@ -1,10 +1,10 @@
 ﻿namespace Notification.NotificationServer.Backplane.Models
 {
-    public class BackplaneEvent : EventArgs
+    public class BackplaneEvent<T> : EventArgs where T : class
     {
-        public BackplaneMessage Message { get; private set; }
+        public BackplaneMessage<T> Message { get; private set; }
 
-        public BackplaneEvent(BackplaneMessage message)
+        public BackplaneEvent(BackplaneMessage<T> message)
         {
             Message = message;
         }

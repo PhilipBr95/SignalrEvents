@@ -1,4 +1,5 @@
 ﻿using ClassLibrary1;
+using ConsoleApp4.Models;
 using Microsoft.Extensions.Logging;
 using Notification.NotifierLibrary;
 
@@ -13,7 +14,8 @@ namespace ConsoleApp4
 
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            Console.WriteLine("Waiting for the SignalR to spin up...");
+            Thread.Sleep(5000);
 
             _loggerFactory = LoggerFactory.Create(builder =>
             {
@@ -40,6 +42,12 @@ namespace ConsoleApp4
 
         private static async Task ListenForRequests()
         {
+            Console.WriteLine("Connecting...");
+            Console.WriteLine("Press:");
+            Console.WriteLine("1: Send to local SignalR");
+            Console.WriteLine("2: Send to remote SignalR");
+            Console.WriteLine("");
+
             var server = new Server("https://localhost:5001/NotificationHub", _loggerFactory.CreateLogger("Server"));
             _ = server.StartAsync();
 
@@ -49,8 +57,7 @@ namespace ConsoleApp4
             var client2 = new Client("http://localhost:8080/NotificationHub", 2, false, _loggerFactory.CreateLogger("Client2"));
             _ = client2.StartAsync();
 
-            var privateClient3 = new Client("http://localhost:8080/NotificationHub", 3, true, _loggerFactory.CreateLogger("PrivateClient3"));
-            _ = privateClient3.StartAsync();
+            var notifier = new Notifier<CalculationNotification>(new NotifierSettings("https://localhost:5001/NotificationHub", NotifierPurpose.Receiver), _logger);
 
             while (true)
             {
@@ -65,9 +72,6 @@ namespace ConsoleApp4
                         break;
                     case '2':
                         await client2.SendAsync();
-                        break;
-                    case '3':
-                        await privateClient3.SendAsync();
                         break;
                 }
             }
@@ -168,120 +172,5 @@ namespace ConsoleApp4
                 _request = null;
             }
         }
-    }
-
-    public class Client
-    {
-        private readonly string _server;
-        private readonly int _requestId;
-        private readonly bool _isPrivate;
-        private readonly ILogger _logger;
-        private Request _request;
-
-        public Client(string server, int requestId, bool isPrivate, ILogger logger)
-        {
-            _server = server;
-            _requestId = requestId;
-            _isPrivate = isPrivate;
-            _logger = logger;
-        }
-
-        public async Task StartAsync()
-        {
-            var notifier = new Notifier<CalculationNotification>(new NotifierSettings(_server, NotifierPurpose.Receiver), _logger);
-            var notifications = await notifier.ConnectAsync();
-
-            _logger.LogInformation($"Creating Notifier with isPrivate:{_isPrivate}");
-
-            NotificationSettings? settings = _isPrivate ? new NotificationSettings { ConnectionId = notifier.ConnectionId } : null;
-            var request = new Request { RequestId = _requestId, NotificationSettings = settings };
-            request.Events = notifications;
-
-            request.Events.Started += (object? sender, StartedEventArgs e) =>
-            {
-                _logger.LogInformation($"Received {nameof(request.Events.Started)} for {e.RequestId} from {sender}");
-            };
-
-            request.Events.Finished += (object? sender, FinishedEventArgs e) =>
-            {
-                _logger.LogInformation($"Received {nameof(request.Events.Finished)} for {e.RequestId} from {sender}");
-                _logger.LogInformation($"Finished {e.RequestId}...");
-            };
-
-            _request = request;
-        }
-
-        internal async Task SendAsync()
-        {
-            await using (var requestNotifier = new Notifier<RequestNotification>(new NotifierSettings(_server, NotifierPurpose.Transmitter, null), _logger))
-            {
-                var notifier = await requestNotifier.ConnectAsync();
-                notifier.RaiseProcessingRequired(this, new RequestNotification.ProcessingRequiredEventArgs {  RequestId = _requestId });
-            }
-        }
-    }
-
-    public class Server 
-    {
-        private readonly string _server;
-        private readonly ILogger _logger;
-        private Notifier<CalculationNotification> _replyNotifier;
-        private Notifier<RequestNotification> _receiveNotifier;
-
-        public Server(string server, ILogger logger)
-        {
-            _server = server;
-            _logger = logger;
-        }
-
-        public async Task StartAsync()
-        {
-            _logger.LogInformation($"Server running");
-
-            _replyNotifier = new Notifier<CalculationNotification>(new NotifierSettings(_server, NotifierPurpose.Transmitter, null), _logger);
-            _receiveNotifier = new Notifier<RequestNotification>(new NotifierSettings(_server, NotifierPurpose.Receiver, null), _logger);
-
-            var replyNotifications = await _replyNotifier.ConnectAsync();
-            var receiveNotifications = await _receiveNotifier.ConnectAsync();
-
-            receiveNotifications.ProcessingRequired += (sender, request) =>
-            {
-                _logger.LogInformation($"Received 'RequestId {request.RequestId}'");
-
-                replyNotifications.RaiseStarted(new object(), new StartedEventArgs { RequestId = request.RequestId });
-
-                Task.Delay(5000).ContinueWith(t =>
-                {
-                    replyNotifications.RaiseFinished(new object(), new FinishedEventArgs { RequestId = request.RequestId });
-                });
-            };
-        }
-    }
-
-    public class RequestNotification
-    {
-        public event EventHandler<ProcessingRequiredEventArgs> ProcessingRequired;
-
-        public void RaiseProcessingRequired(object sender, ProcessingRequiredEventArgs e)
-        {
-            ProcessingRequired?.Invoke(sender, e);
-        }
-
-        public class ProcessingRequiredEventArgs : EventArgs 
-        {
-            public int RequestId { get; set; }
-        }
-    }
-
-    internal class Request
-    {
-        public int RequestId { get; set; }
-        public NotificationSettings NotificationSettings { get; set; }
-        public CalculationNotification Events { get; set; }
-    }
-
-    public class NotificationSettings
-    {
-        public string ConnectionId { get; set; }
     }
 }

@@ -10,26 +10,35 @@ using Notification.NotificationServer.Backplane.Interfaces;
 
 namespace Notification.NotificationServer.Backplane.RabbitMq
 {
-    public class Backplane<THub> : IBackplane<THub> where THub : Hub
+    public class Backplane<THub, TMessage> : IBackplane<THub, TMessage> where THub : Hub
+                                                                        where TMessage : class
     {
         private readonly IConnection _connection;
         private readonly RabbitMqOptions _options;
-        private readonly ILogger<IBackplane<THub>> _logger;
+        private readonly ILogger<IBackplane<THub, TMessage>> _logger;
         private readonly IHubContext<THub> _hubContext;
         private readonly IModel _channel;
-        private Action<object, IHubContext<THub>, BackplaneEvent>? _receivedHandler = null;
+        private Action<object, IHubContext<THub>, BackplaneEvent<TMessage>>? _receivedHandler = null;
 
         private static int _messageCounter = 0;
-        
-        public Backplane(IHubContext<THub> hubContext, IConnection connection, RabbitMqOptions options, ILogger<IBackplane<THub>> logger)
+        public string ConsumerTag { get; private set; }
+
+        public Backplane(IHubContext<THub> hubContext, IConnection connection, RabbitMqOptions options, ILogger<IBackplane<THub, TMessage>> logger)
         {
             _connection = connection;
             _options = options;
             _logger = logger;
             _hubContext = hubContext;
 
-            _channel = _connection.CreateModel();
-            Subscribe();
+            try
+            {
+                _channel = _connection.CreateModel();
+                Subscribe();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogCritical(ex, $"Failed to connect to Rabbit");
+            }
         }
 
         private void Subscribe()
@@ -39,33 +48,35 @@ namespace Notification.NotificationServer.Backplane.RabbitMq
             {
                 byte[] body = ea.Body.ToArray();
                 var json = Encoding.UTF8.GetString(body);
-                var message = JsonSerializer.Deserialize<BackplaneMessage>(json);
+                var message = JsonSerializer.Deserialize<BackplaneMessage<TMessage>>(json);
 
                 //We don't care about the message if it came from us
                 if (message != null && message.MessageId.StartsWith(_options.QueueName) == false)
                 {
                     _logger?.LogDebug($"Received message {message.MessageId} from RabbitMq Backplane");
 
-                    _receivedHandler?.Invoke(this, _hubContext, new BackplaneEvent(message));
+                    _receivedHandler?.Invoke(this, _hubContext, new BackplaneEvent<TMessage>(message));
                 }
                 else
                     _logger?.LogDebug($"Ignoring message {message.MessageId} from RabbitMq Backplane");
             };
 
-            _channel.BasicConsume(queue: _options.QueueName,
-                                 autoAck: true,
-                                 consumer: consumer);
+            ConsumerTag = _channel.BasicConsume(queue: _options.QueueName,
+                                              autoAck: true,
+                                             consumer: consumer);
+
+            _logger.LogInformation($"Connected with ConsumerTag {ConsumerTag}");
         }
 
-        public void Send(string connectionId, string command, MessageData messageData)
+        public void Send(string connectionId, string command, TMessage message)
         {
-            var backplaneMessage = new BackplaneMessage { ConnectionId = connectionId, Command = command, MessageData = messageData, MessageId = GenerateMessageId() };
+            var backplaneMessage = new BackplaneMessage<TMessage> { ConnectionId = connectionId, Command = command, EventArgs = message, MessageId = GenerateMessageId() };
             _logger.LogDebug($"Sending message {backplaneMessage.MessageId} to the RabbitMq Backplane");
 
             try
             {                                
-                var message = JsonSerializer.Serialize(backplaneMessage);
-                var body = Encoding.UTF8.GetBytes(message);
+                var messageJson = JsonSerializer.Serialize(backplaneMessage);
+                var body = Encoding.UTF8.GetBytes(messageJson);
 
                 using var model = _connection.CreateModel();
                 model.ConfirmSelect();
@@ -89,7 +100,7 @@ namespace Notification.NotificationServer.Backplane.RabbitMq
             return $"{_options.QueueName}_{id}";
         }
 
-        public void AddReceived(Action<object, IHubContext<THub>, BackplaneEvent> value) => _receivedHandler = value;
+        public void AddReceived(Action<object, IHubContext<THub>, BackplaneEvent<TMessage>> value) => _receivedHandler = value;
 
     }
 }
