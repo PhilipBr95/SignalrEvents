@@ -7,24 +7,24 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notification.NotifierLibrar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notification.NotificationServer", "Notification.NotificationServer\Notification.NotificationServer.csproj", "{104A94BF-7EE8-4061-97F4-B50AC15C53CC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassLibrary1", "Tests\ClassLibrary1\ClassLibrary1.csproj", "{81A4C52C-6404-42B4-B315-EB803E5A963E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClassLibrary1", "Scenarios\ClassLibrary1\ClassLibrary1.csproj", "{81A4C52C-6404-42B4-B315-EB803E5A963E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp3", "Tests\ConsoleApp3\ConsoleApp3.csproj", "{010B636D-ED4C-46A4-8327-A5DC9CAF47AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp3", "Scenarios\ConsoleApp3\ConsoleApp3.csproj", "{010B636D-ED4C-46A4-8327-A5DC9CAF47AB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp4", "Tests\ConsoleApp4\ConsoleApp4.csproj", "{79F09866-59FA-4A79-8D7D-AF5DE6DFCFCE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp4", "Scenarios\ConsoleApp4\ConsoleApp4.csproj", "{79F09866-59FA-4A79-8D7D-AF5DE6DFCFCE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notification.NotificationServer.Backplane", "Notification.NotificationServer.Backplane\Notification.NotificationServer.Backplane.csproj", "{366A9C3B-6236-49B6-94FE-D4A215E46DB2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Notification.NotificationServer.Backplane.RabbitMq", "Notification.NotificationServer.Backplane.RabbitMq\Notification.NotificationServer.Backplane.RabbitMq.csproj", "{34212B03-0324-49A4-9A24-B71642A4145F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{039186A5-7BA0-4AEF-9C11-04CAC26F758B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scenarios", "Scenarios", "{039186A5-7BA0-4AEF-9C11-04CAC26F758B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{01723D60-7A19-4BC6-AD37-2851E66AA2A6}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp_462", "Tests\ConsoleApp_462\ConsoleApp_462.csproj", "{8CC8030F-0AF3-48B1-B0CC-1BC56D24B5CB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp_462", "Scenarios\ConsoleApp_462\ConsoleApp_462.csproj", "{8CC8030F-0AF3-48B1-B0CC-1BC56D24B5CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
